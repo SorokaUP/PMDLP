@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ПрофитМед Сканер МДЛП</string>
+    <string name="rest_api_error">Ошибка сервера</string>
+    <string name="scanner_default">...</string>
 </resources>

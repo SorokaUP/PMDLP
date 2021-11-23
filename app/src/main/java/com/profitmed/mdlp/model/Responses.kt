@@ -1,11 +1,13 @@
 package com.profitmed.mdlp.model
 
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 
 data class ResponseIdResMsg(
+    @SerializedName("id")
     val id: Int,
+    @SerializedName("res")
     val res: Int,
+    @SerializedName("msg")
     val msg: String
 )
 
@@ -27,9 +29,5 @@ data class RequestImportKiz(
 ) {
     override fun toString(): String {
         return "did:$did;kiz:$kiz;lid800:$lid800;eid:$eid;lid4000:$lid4000;var1:$var1;var2:$var2"
-    }
-
-    fun convertToJson(): String {
-        return "{\"did\":\"$did\", \"kiz\":\"kiz\", \"lid800\":\"$lid800\", \"eid\":\"$eid\", \"lid4000\":\"$lid4000\", \"var1\":\"$var1\", \"var2\":\"$var2\"}"
     }
 }

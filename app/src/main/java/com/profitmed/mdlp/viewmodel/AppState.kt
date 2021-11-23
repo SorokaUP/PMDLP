@@ -1,4 +1,4 @@
-package com.profitmed.mdlp.presenter
+package com.profitmed.mdlp.viewmodel
 
 import com.profitmed.mdlp.model.ResponseIdResMsg
 

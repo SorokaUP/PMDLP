@@ -1,7 +1,5 @@
 package com.profitmed.mdlp.model
 
-import android.util.Log
-import com.profitmed.mdlp.ui.MainActivity
 import retrofit2.Callback
 
 class Repository: IRepository {
@@ -15,28 +13,8 @@ class Repository: IRepository {
         var1: String,
         var2: String
     ) {
-        Log.d("XXX", "Отправляем данные")
-        /*RestApi.api.importkiz(
-            MainActivity.DEF_DID,
-            kiz,
-            MainActivity.DEF_LID800,
-            MainActivity.DEF_EID,
-            MainActivity.DEF_LID4000,
-            MainActivity.DEF_VAR1,
-            MainActivity.DEF_VAR2
-        ).enqueue(callback)*/
-
-        var body = RequestImportKiz(
-            MainActivity.DEF_DID,
-            kiz,
-            MainActivity.DEF_LID800,
-            MainActivity.DEF_EID,
-            MainActivity.DEF_LID4000,
-            MainActivity.DEF_VAR1,
-            MainActivity.DEF_VAR2)
-
-        Log.d("XXX", body.convertToJson())
-        RestApi.api.importkizPOST(body)
-        Log.d("XXX", "Отправлено")
+        val body = RequestImportKiz(did, kiz, lid800, eid, lid4000, var1, var2)
+        RestApi.pm.importkiz(body)
+            .enqueue(callback)
     }
 }
