@@ -3,12 +3,12 @@ package com.profitmed.mdlp.model
 import com.google.gson.annotations.SerializedName
 
 data class ResponseIdResMsg(
-    @SerializedName("id")
-    val id: Int,
-    @SerializedName("res")
-    val res: Int,
-    @SerializedName("msg")
-    val msg: String
+    @SerializedName("ID")
+    val ID: Int,
+    @SerializedName("RES")
+    val RES: Int,
+    @SerializedName("MSG")
+    val MSG: String
 )
 
 data class RequestImportKiz(

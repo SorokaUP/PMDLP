@@ -1,5 +1,6 @@
 package com.profitmed.mdlp.viewmodel
 
+import android.content.res.Resources
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -44,7 +45,10 @@ class ScanViewModel(
             val res: ResponseIdResMsg? = response.body()
             liveDataToObserve.postValue(
                 if (response.isSuccessful && res != null) {
-                    AppState.Success(res)
+                    if (res.RES >= 0)
+                        AppState.Success(res)
+                    else
+                        AppState.Error(Exception(res.MSG))
                 } else {
                     AppState.Error(Exception("rest_api_error"))
                 }

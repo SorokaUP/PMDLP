@@ -1,5 +1,6 @@
 package com.profitmed.mdlp.ui
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -15,12 +16,17 @@ import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import com.profitmed.mdlp.R
 import com.profitmed.mdlp.databinding.ScanFragmentBinding
 import com.profitmed.mdlp.model.Repository
 import com.profitmed.mdlp.viewmodel.AppState
 import com.profitmed.mdlp.viewmodel.ScanViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import me.dm7.barcodescanner.zxing.ZXingScannerView
+import android.view.animation.AlphaAnimation
+import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+
 
 class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHandler {
 
@@ -90,15 +96,24 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         // В зависимости от того, чем сейчас занят поставщик, выполняем какие-то действия, о том
         // чем он занят нам сообщается из appState который в свою очередь будет одним из вариаций
         // Success(...), Loading(), Error(...)
+        binding.resultLayout.visibility = View.GONE
         when (appState) {
             is AppState.Success -> {
                 binding.loadingLayout.visibility = View.GONE
+                startScanner()
+                binding.tvRes.text = getString(R.string.added_id) + appState.res.ID.toString()
+                successAction()
             }
             is AppState.Loading -> {
                 binding.loadingLayout.visibility = View.VISIBLE
+                stopScanner()
             }
             is AppState.Error -> {
                 binding.loadingLayout.visibility = View.GONE
+                startScanner()
+                binding.tvRes.text = appState.error.message
+                errorAction()
+
                 /*binding.root.showToast(
                     getString(R.string.error_msg),
                     getString(R.string.reload_msg),
@@ -108,9 +123,48 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         }
     }
 
-    override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+    private fun successAction() {
+        binding.resultLayout.visibility = View.VISIBLE
+        binding.imgRes.setImageResource(R.drawable.ic_ok_circle)
+        binding.imgRes.visibility = View.VISIBLE
+        binding.resultLayout.pmStartAnimation()
+    }
+
+    private fun errorAction() {
+        binding.resultLayout.visibility = View.VISIBLE
+        binding.imgRes.setImageResource(R.drawable.ic_cancel_circle)
+        binding.imgRes.visibility = View.VISIBLE
+        binding.resultLayout.pmStartAnimation()
+    }
+
+    private fun ConstraintLayout.pmStartAnimation() {
+        val animOn = AlphaAnimation(0.0f, 1.0f).apply {
+            this.duration = 500
+            this.startOffset = 200
+            this.fillAfter = true
+        }
+        this.startAnimation(animOn)
+
+        val animOff = AlphaAnimation(1.0f, 0.0f).apply {
+            this.duration = 500
+            this.startOffset = 500
+            this.fillAfter = true
+        }
+        this.startAnimation(animOff)
+    }
+
+    private fun startScanner() {
         scannerView.setResultHandler(this)
         scannerView.startCamera()
+        binding.txtResult.text = getString(R.string.scanner_default)
+    }
+
+    private fun stopScanner() {
+        scannerView.stopCamera()
+    }
+
+    override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+        startScanner()
     }
 
     override fun onPermissionDenied(response: PermissionDeniedResponse?) {
@@ -122,5 +176,10 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         token: PermissionToken?
     ) {
         TODO("Not yet implemented")
+    }
+
+    override fun onDestroy() {
+        stopScanner()
+        super.onDestroy()
     }
 }
