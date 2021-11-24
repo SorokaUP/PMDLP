@@ -6,4 +6,5 @@ sealed class AppState {
     data class Success(val res: ResponseIdResMsg) : AppState()
     data class Error(val error: Throwable) : AppState()
     object Loading : AppState()
+    object Next : AppState()
 }
