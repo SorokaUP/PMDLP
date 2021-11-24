@@ -1,6 +1,5 @@
 package com.profitmed.mdlp.ui
 
-import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -21,10 +20,8 @@ import com.profitmed.mdlp.databinding.ScanFragmentBinding
 import com.profitmed.mdlp.model.Repository
 import com.profitmed.mdlp.viewmodel.AppState
 import com.profitmed.mdlp.viewmodel.ScanViewModel
-import kotlinx.android.synthetic.main.activity_main.*
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 import android.view.animation.AlphaAnimation
-import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 
 
@@ -40,7 +37,8 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         ViewModelProvider(this).get(ScanViewModel::class.java)
     }
 
-
+    var did: String = DEF_DID
+    var isDidMode: Boolean = false
 
     companion object {
         fun newInstance() = ScanFragment()
@@ -72,16 +70,57 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             // Действие, выполняемое по случаю обновления данных в поставщике
             renderData(it)
         })
+
+        binding.inputDidLayout.setEndIconOnClickListener {
+            changeModeDid()
+
+            //startActivity(Intent(Intent.ACTION_VIEW).apply {
+            //    data = Uri.parse("https://en.wikipedia.org/wiki/${binding.inputDid.text.toString()}")
+            //})
+        }
+
+        changeModeDid()
     }
 
     override fun handleResult(rawResult: Result?) {
-        val kiz = rawResult?.toString() ?: ""
-        binding.txtResult.text = kiz
-        putInputKiz(kiz)
+        val code = rawResult?.toString() ?: ""
+
+        if (isDidMode) {
+            scanDid(code)
+        }
+        else {
+            putInputKiz(code)
+        }
+    }
+
+    private fun changeModeDid() {
+        isDidMode = !isDidMode
+        showCurrentScanMode()
+    }
+
+    private fun showCurrentScanMode() {
+        var msg = getString(R.string.scan_mode_on) + " "
+
+        msg += if (isDidMode) {
+            getString(R.string.did_scan_mode)
+        } else {
+            getString(R.string.kiz_scan_mode)
+        }
+
+        showToast(msg)
+        binding.txtResult.text = msg
     }
 
     private fun putInputKiz(kiz: String) {
-        viewModel.putInputKiz(kiz)
+        binding.txtResult.text = kiz
+        viewModel.putInputKiz(did, kiz)
+    }
+
+    private fun scanDid(did: String) {
+        this.did = did
+        binding.inputDid.setText(did)
+        renderData(AppState.Next)
+        changeModeDid()
     }
 
     private fun init() {
@@ -103,6 +142,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
                 startScanner()
                 binding.tvRes.text = getString(R.string.added_id) + appState.res.ID.toString()
                 successAction()
+                showCurrentScanMode()
             }
             is AppState.Loading -> {
                 binding.loadingLayout.visibility = View.VISIBLE
@@ -113,12 +153,16 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
                 startScanner()
                 binding.tvRes.text = appState.error.message
                 errorAction()
+                showCurrentScanMode()
 
                 /*binding.root.showToast(
                     getString(R.string.error_msg),
                     getString(R.string.reload_msg),
                     { viewModel.xxx() }
                 )*/
+            }
+            is AppState.Next -> {
+                startScanner()
             }
         }
     }
@@ -156,7 +200,6 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     private fun startScanner() {
         scannerView.setResultHandler(this)
         scannerView.startCamera()
-        binding.txtResult.text = getString(R.string.scanner_default)
     }
 
     private fun stopScanner() {
@@ -168,7 +211,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     }
 
     override fun onPermissionDenied(response: PermissionDeniedResponse?) {
-        //binding.root.showToast("НЕТ РАЗРЕШЕНИЙ НА КАМЕРУ")
+        showToast("НЕТ РАЗРЕШЕНИЙ НА КАМЕРУ")
     }
 
     override fun onPermissionRationaleShouldBeShown(

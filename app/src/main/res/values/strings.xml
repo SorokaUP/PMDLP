@@ -1,6 +1,10 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">ПрофитМед Сканер МДЛП</string>
     <string name="rest_api_error">Ошибка сервера</string>
     <string name="scanner_default">...</string>
     <string name="added_id">Присвоен ID: </string>
+    <string name="caption_did">Штрих-код документа</string>
+    <string name="scan_mode_on">ВКЛЮЧЕН режим </string>
+    <string name="did_scan_mode">сканирования документа</string>
+    <string name="kiz_scan_mode">сканирования КИЗ</string>
 </resources>

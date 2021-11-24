@@ -8,6 +8,7 @@ import com.profitmed.mdlp.R
 import com.profitmed.mdlp.model.Repository
 import com.profitmed.mdlp.model.ResponseIdResMsg
 import com.profitmed.mdlp.ui.ScanFragment
+import com.profitmed.mdlp.ui.checkKIZ
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -21,13 +22,23 @@ class ScanViewModel(
     private val repository: Repository = Repository()
 ): ViewModel() {
     fun getLiveData() = liveDataToObserve
-    fun putInputKiz(kiz: String) {
+    fun putInputKiz(did: String, kiz: String) {
         Log.d("InputKiz", kiz)
+
+        if (did.isEmpty() || did.trim() == "0") {
+            liveDataToObserve.value = AppState.Error(Exception("Не отсканирован документ"))
+            return
+        }
+        if (!kiz.checkKIZ(true) && !kiz.checkKIZ(false)) {
+            liveDataToObserve.value = AppState.Error(Exception("Не отсканирован КИЗ (коробка или упаковка)"))
+            return
+        }
+
         liveDataToObserve.value = AppState.Loading
         Thread {
             repository.putInputKiz(
                 callBack,
-                ScanFragment.DEF_DID,
+                did,
                 kiz,
                 ScanFragment.DEF_LID800,
                 ScanFragment.DEF_EID,
