@@ -79,6 +79,10 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             //})
         }
 
+        binding.fabScan.setOnClickListener {
+            showToast("Ы")
+        }
+
         changeModeDid()
     }
 
