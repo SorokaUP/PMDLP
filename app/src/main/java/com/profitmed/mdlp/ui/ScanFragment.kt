@@ -79,6 +79,10 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             //})
         }
 
+        binding.fabScan.setOnClickListener {
+            startScanner()
+        }
+
         changeModeDid()
     }
 
@@ -107,8 +111,9 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             getString(R.string.kiz_scan_mode)
         }
 
-        showToast(msg)
+        //showToast(msg)
         binding.txtResult.text = msg
+        binding.inputDidLayout.helperText = msg
     }
 
     private fun putInputKiz(kiz: String) {
@@ -139,7 +144,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         when (appState) {
             is AppState.Success -> {
                 binding.loadingLayout.visibility = View.GONE
-                startScanner()
+                //startScanner()
                 binding.tvRes.text = getString(R.string.added_id) + appState.res.ID.toString()
                 successAction()
                 showCurrentScanMode()
@@ -162,7 +167,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
                 )*/
             }
             is AppState.Next -> {
-                startScanner()
+                //startScanner()
             }
         }
     }
@@ -207,7 +212,8 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     }
 
     override fun onPermissionGranted(response: PermissionGrantedResponse?) {
-        startScanner()
+        //startScanner()
+        showToast("Разрешения на камеру выданы")
     }
 
     override fun onPermissionDenied(response: PermissionDeniedResponse?) {

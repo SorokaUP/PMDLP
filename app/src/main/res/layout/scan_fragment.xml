@@ -6,46 +6,51 @@
     android:layout_height="match_parent"
     tools:context=".ui.ScanFragment">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/layout_did"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:layout_alignParentTop="true">
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/input_did_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/caption_did"
-            app:counterEnabled="true"
-            app:counterMaxLength="255"
-            app:endIconCheckable="true"
-            app:endIconDrawable="@drawable/ic_qr_code"
-            app:endIconMode="custom"
-            app:layout_constraintBottom_toTopOf="@+id/image_view"
-            app:layout_constraintStart_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/input_did"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-    </LinearLayout>
-
-    <me.dm7.barcodescanner.zxing.ZXingScannerView
-        android:id="@+id/zxscan"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/layout_result"
-        android:layout_below="@id/layout_did"
-        tools:visibility="visible" />
+        tools:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/layout_did"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:layout_alignParentTop="true">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_did_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/caption_did"
+                app:helperText="@string/scan_mode_on"
+                app:counterEnabled="true"
+                app:counterMaxLength="255"
+                app:endIconCheckable="true"
+                app:endIconDrawable="@drawable/ic_revert"
+                app:endIconMode="custom"
+                app:layout_constraintBottom_toTopOf="@+id/image_view"
+                app:layout_constraintStart_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_did"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <me.dm7.barcodescanner.zxing.ZXingScannerView
+            android:id="@+id/zxscan"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/layout_result"
+            android:layout_below="@id/layout_did"
+            tools:visibility="visible" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,13 +64,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/txt_result"
-            android:text="@string/scanner_default"
+            tools:text="@string/app_name"
+            tools:textColor="@color/black"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:backgroundTint="@color/black"
             android:gravity="center"/>
 
     </LinearLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabScan"
+            android:layout_width="69dp"
+            android:layout_height="87dp"
+            android:layout_alignBottom="@id/zxscan"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="15dp"
+            android:backgroundTint="#8BC34A"
+            android:src="@drawable/ic_qr_code" />
+    </RelativeLayout>
 
     <FrameLayout
         android:id="@+id/loadingLayout"
@@ -89,7 +107,7 @@
         android:background="@color/purple_200"
         android:visibility="gone"
         android:backgroundTint="@color/white"
-        tools:visibility="gone">
+        tools:visibility="visible">
 
         <ImageView
             android:id="@+id/imgRes"
@@ -109,7 +127,7 @@
             android:layout_height="150dp"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
-            android:text="XXXX"
+            tools:text="@string/added_id"
             android:textColor="@color/black"
             android:textAlignment="center"
             android:textSize="25sp"
