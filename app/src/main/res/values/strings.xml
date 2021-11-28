@@ -4,7 +4,7 @@
     <string name="scanner_default">...</string>
     <string name="added_id">Присвоен ID: </string>
     <string name="caption_did">Штрих-код документа</string>
-    <string name="scan_mode_on">ВКЛЮЧЕН режим </string>
+    <string name="scan_mode_on">Режим </string>
     <string name="did_scan_mode">сканирования документа</string>
     <string name="kiz_scan_mode">сканирования КИЗ</string>
 </resources>
