@@ -1,5 +1,6 @@
 package com.profitmed.mdlp.ui
 
+import android.media.Image
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -22,13 +23,17 @@ import com.profitmed.mdlp.viewmodel.AppState
 import com.profitmed.mdlp.viewmodel.ScanViewModel
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 import android.view.animation.AlphaAnimation
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHandler {
 
-    private lateinit var scannerView: ZXingScannerView;
-    private lateinit var binding: ScanFragmentBinding;
+    private lateinit var scannerView: ZXingScannerView
+    private lateinit var binding: ScanFragmentBinding
     private val repository: Repository = Repository()
     // LiveData может подписывать кого либо на себя, говоря тем самым кому бы то нибыло об
     // изменениях внутри него. Конкретный экземпляр Модели для конкретного Fragment типв AppState
@@ -38,6 +43,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     }
 
     var did: String = DEF_DID
+    private lateinit var kiz: String
     var isDidMode: Boolean = false
 
     companion object {
@@ -118,13 +124,11 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             getString(R.string.kiz_scan_mode)
         }
 
-        //showToast(msg)
-        binding.txtResult.text = msg
         binding.inputDidLayout.helperText = msg
     }
 
     private fun putInputKiz(kiz: String) {
-        binding.txtResult.text = kiz
+        this.kiz = kiz
         viewModel.putInputKiz(did, kiz)
     }
 
@@ -151,9 +155,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         when (appState) {
             is AppState.Success -> {
                 binding.loadingLayout.visibility = View.GONE
-                //startScanner()
-                binding.tvRes.text = getString(R.string.added_id) + appState.res.ID.toString()
-                successAction()
+                successAction(appState.res.ID)
                 showCurrentScanMode()
             }
             is AppState.Loading -> {
@@ -163,8 +165,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             is AppState.Error -> {
                 binding.loadingLayout.visibility = View.GONE
                 startScanner()
-                binding.tvRes.text = appState.error.message
-                errorAction()
+                errorAction(appState.error.message ?: getString(R.string.rest_api_error))
                 showCurrentScanMode()
 
                 /*binding.root.showToast(
@@ -179,18 +180,36 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         }
     }
 
-    private fun successAction() {
-        binding.resultLayout.visibility = View.VISIBLE
-        binding.imgRes.setImageResource(R.drawable.ic_ok_circle)
-        binding.imgRes.visibility = View.VISIBLE
-        binding.resultLayout.pmStartAnimation()
+    private fun successAction(resId: Int) {
+        context?.let {
+            val bottomSheetDialog = BottomSheetDialog(it)
+            bottomSheetDialog.setContentView(R.layout.bottom_sheet)
+            (bottomSheetDialog.findViewById(R.id.modalTvRes) as TextView?)?.text = getString(R.string.added_id) + resId.toString()
+            (bottomSheetDialog.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
+            (bottomSheetDialog.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(R.drawable.ic_ok_circle)
+
+            bottomSheetDialog.show()
+        }
+        //binding.resultLayout.visibility = View.VISIBLE
+        //binding.imgRes.setImageResource(R.drawable.ic_ok_circle)
+        //binding.imgRes.visibility = View.VISIBLE
+        //binding.resultLayout.pmStartAnimation()
     }
 
-    private fun errorAction() {
-        binding.resultLayout.visibility = View.VISIBLE
-        binding.imgRes.setImageResource(R.drawable.ic_cancel_circle)
-        binding.imgRes.visibility = View.VISIBLE
-        binding.resultLayout.pmStartAnimation()
+    private fun errorAction(errMsg: String) {
+        context?.let {
+            val bottomSheetDialog = BottomSheetDialog(requireActivity().applicationContext)
+            bottomSheetDialog.setContentView(R.layout.bottom_sheet)
+            (bottomSheetDialog.findViewById(R.id.modalTvRes) as TextView?)?.text = errMsg
+            (bottomSheetDialog.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
+            (bottomSheetDialog.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(R.drawable.ic_cancel_circle)
+
+            bottomSheetDialog.show()
+        }
+        //binding.resultLayout.visibility = View.VISIBLE
+        //binding.imgRes.setImageResource(R.drawable.ic_cancel_circle)
+        //binding.imgRes.visibility = View.VISIBLE
+        //binding.resultLayout.pmStartAnimation()
     }
 
     private fun ConstraintLayout.pmStartAnimation() {
