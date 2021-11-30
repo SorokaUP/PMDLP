@@ -27,7 +27,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 
 class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHandler {
 
-    lateinit var scannerView: ZXingScannerView;
+    private lateinit var scannerView: ZXingScannerView;
     private lateinit var binding: ScanFragmentBinding;
     private val repository: Repository = Repository()
     // LiveData может подписывать кого либо на себя, говоря тем самым кому бы то нибыло об
@@ -49,6 +49,8 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         const val DEF_LID4000 = "0"
         const val DEF_VAR1 = "0"
         const val DEF_VAR2 = "0"
+
+        const val KEY_DID = "DID"
     }
 
     override fun onCreateView(
@@ -57,12 +59,17 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     ): View? {
         binding = ScanFragmentBinding.inflate(inflater, container, false)
         setHasOptionsMenu(true)
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?){
         super.onViewCreated(view, savedInstanceState)
         init()
+
+        if (savedInstanceState != null) {
+            scanDid(savedInstanceState.getString(KEY_DID, ""))
+        }
 
         // Сообщаем фрагменту, о модели данных, с которой он будет общаться
         // Сразу же подписываемся на обновления всех данных от этой модели данных
@@ -208,7 +215,8 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     }
 
     private fun stopScanner() {
-        scannerView.stopCamera()
+        if (this::scannerView.isInitialized)
+            scannerView.stopCamera()
     }
 
     override fun onPermissionGranted(response: PermissionGrantedResponse?) {
@@ -230,5 +238,10 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     override fun onDestroy() {
         stopScanner()
         super.onDestroy()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(KEY_DID, did)
+        super.onSaveInstanceState(outState)
     }
 }
