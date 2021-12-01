@@ -1,7 +1,9 @@
 package com.profitmed.mdlp.ui
 
 import android.view.View
+import android.view.animation.AlphaAnimation
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 
@@ -44,4 +46,20 @@ fun String.checkKIZ(isSGTIN: Boolean): Boolean {
 
         return true
     }
+}
+
+private fun ConstraintLayout.pmStartAnimation() {
+    val animOn = AlphaAnimation(0.0f, 1.0f).apply {
+        this.duration = 500
+        this.startOffset = 200
+        this.fillAfter = true
+    }
+    this.startAnimation(animOn)
+
+    val animOff = AlphaAnimation(1.0f, 0.0f).apply {
+        this.duration = 500
+        this.startOffset = 500
+        this.fillAfter = true
+    }
+    this.startAnimation(animOff)
 }

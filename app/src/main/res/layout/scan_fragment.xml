@@ -58,7 +58,7 @@
             android:layout_alignBottom="@id/zxscan"
             android:layout_centerHorizontal="true"
             android:layout_gravity="bottom|center"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="30dp"
             android:backgroundTint="#8BC34A"
             android:text="Сканировать"
             app:icon="@drawable/ic_qr_code" />

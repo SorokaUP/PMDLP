@@ -24,6 +24,7 @@ class ScanViewModel(
     fun getLiveData() = liveDataToObserve
     fun putInputKiz(did: String, kiz: String) {
         Log.d("InputKiz", kiz)
+        liveDataToObserve.value = AppState.Loading
 
         if (did.isEmpty() || did.trim() == "0") {
             liveDataToObserve.value = AppState.Error(Exception("Не отсканирован документ"))
@@ -34,7 +35,6 @@ class ScanViewModel(
             return
         }
 
-        liveDataToObserve.value = AppState.Loading
         Thread {
             repository.putInputKiz(
                 callBack,

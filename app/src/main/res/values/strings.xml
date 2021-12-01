@@ -8,4 +8,5 @@
     <string name="did_scan_mode">сканирования документа</string>
     <string name="kiz_scan_mode">сканирования КИЗ</string>
     <string name="scan_ready">Готов к сканированию</string>
+    <string name="scanned_code">Сканирован код</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.profitmed.mdlp.ui
 
+import android.content.Context
 import android.media.Image
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
@@ -25,8 +26,10 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView
 import android.view.animation.AlphaAnimation
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.profitmed.mdlp.model.RestApi
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -34,17 +37,16 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
 
     private lateinit var scannerView: ZXingScannerView
     private lateinit var binding: ScanFragmentBinding
-    private val repository: Repository = Repository()
     // LiveData может подписывать кого либо на себя, говоря тем самым кому бы то нибыло об
-    // изменениях внутри него. Конкретный экземпляр Модели для конкретного Fragment типв AppState
+    // изменениях внутри него. Конкретный экземпляр Модели для конкретного Fragment типа AppState
     private val liveDataToObserve: MutableLiveData<AppState> = MutableLiveData()
     private val viewModel: ScanViewModel by lazy {
         ViewModelProvider(this).get(ScanViewModel::class.java)
     }
 
-    var did: String = DEF_DID
-    private lateinit var kiz: String
-    var isDidMode: Boolean = false
+    private var did: String = DEF_DID
+    private var kiz: String = ""
+    private var isDidMode: Boolean = false
 
     companion object {
         fun newInstance() = ScanFragment()
@@ -57,6 +59,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         const val DEF_VAR2 = "0"
 
         const val KEY_DID = "DID"
+        const val KEY_KIZ = "KIZ"
     }
 
     override fun onCreateView(
@@ -74,6 +77,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         init()
 
         if (savedInstanceState != null) {
+            kiz = savedInstanceState.getString(KEY_KIZ, "")
             scanDid(savedInstanceState.getString(KEY_DID, ""))
         }
 
@@ -86,10 +90,6 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
 
         binding.inputDidLayout.setEndIconOnClickListener {
             changeModeDid()
-
-            //startActivity(Intent(Intent.ACTION_VIEW).apply {
-            //    data = Uri.parse("https://en.wikipedia.org/wiki/${binding.inputDid.text.toString()}")
-            //})
         }
 
         binding.fabScan.setOnClickListener {
@@ -135,7 +135,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     private fun scanDid(did: String) {
         this.did = did
         binding.inputDid.setText(did)
-        renderData(AppState.Next)
+        renderData(AppState.Idle)
         changeModeDid()
     }
 
@@ -157,6 +157,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
                 binding.loadingLayout.visibility = View.GONE
                 successAction(appState.res.ID)
                 showCurrentScanMode()
+                liveDataToObserve.value = AppState.Idle
             }
             is AppState.Loading -> {
                 binding.loadingLayout.visibility = View.VISIBLE
@@ -164,31 +165,19 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
             }
             is AppState.Error -> {
                 binding.loadingLayout.visibility = View.GONE
-                startScanner()
                 errorAction(appState.error.message ?: getString(R.string.rest_api_error))
                 showCurrentScanMode()
-
-                /*binding.root.showToast(
-                    getString(R.string.error_msg),
-                    getString(R.string.reload_msg),
-                    { viewModel.xxx() }
-                )*/
+                liveDataToObserve.value = AppState.Idle
             }
-            is AppState.Next -> {
-                //startScanner()
+            is AppState.Idle -> {
+                //TODO: Ожидание
             }
         }
     }
 
     private fun successAction(resId: Int) {
         context?.let {
-            val bottomSheetDialog = BottomSheetDialog(it)
-            bottomSheetDialog.setContentView(R.layout.bottom_sheet)
-            (bottomSheetDialog.findViewById(R.id.modalTvRes) as TextView?)?.text = getString(R.string.added_id) + resId.toString()
-            (bottomSheetDialog.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
-            (bottomSheetDialog.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(R.drawable.ic_ok_circle)
-
-            bottomSheetDialog.show()
+            it.showBottomSheet(getString(R.string.added_id) + resId.toString(), R.drawable.ic_ok_circle)
         }
         //binding.resultLayout.visibility = View.VISIBLE
         //binding.imgRes.setImageResource(R.drawable.ic_ok_circle)
@@ -198,13 +187,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
 
     private fun errorAction(errMsg: String) {
         context?.let {
-            val bottomSheetDialog = BottomSheetDialog(requireActivity().applicationContext)
-            bottomSheetDialog.setContentView(R.layout.bottom_sheet)
-            (bottomSheetDialog.findViewById(R.id.modalTvRes) as TextView?)?.text = errMsg
-            (bottomSheetDialog.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
-            (bottomSheetDialog.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(R.drawable.ic_cancel_circle)
-
-            bottomSheetDialog.show()
+            it.showBottomSheet(errMsg, R.drawable.ic_cancel_circle)
         }
         //binding.resultLayout.visibility = View.VISIBLE
         //binding.imgRes.setImageResource(R.drawable.ic_cancel_circle)
@@ -212,20 +195,18 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
         //binding.resultLayout.pmStartAnimation()
     }
 
-    private fun ConstraintLayout.pmStartAnimation() {
-        val animOn = AlphaAnimation(0.0f, 1.0f).apply {
-            this.duration = 500
-            this.startOffset = 200
-            this.fillAfter = true
-        }
-        this.startAnimation(animOn)
+    private fun Context.showBottomSheet(msg: String, iconId: Int) {
+        BottomSheetDialog(this).apply {
+            this.setContentView(R.layout.bottom_sheet)
+            (this.findViewById(R.id.modalTvRes) as TextView?)?.text = msg
+            (this.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
+            (this.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(iconId)
 
-        val animOff = AlphaAnimation(1.0f, 0.0f).apply {
-            this.duration = 500
-            this.startOffset = 500
-            this.fillAfter = true
-        }
-        this.startAnimation(animOff)
+            /*this.setOnCancelListener {
+                Toast.makeText(this.context, "Скрыт", Toast.LENGTH_SHORT).show()
+                //startScanner()
+            }*/
+        }.show()
     }
 
     private fun startScanner() {
@@ -239,7 +220,6 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
     }
 
     override fun onPermissionGranted(response: PermissionGrantedResponse?) {
-        //startScanner()
         showToast("Разрешения на камеру выданы")
     }
 
@@ -261,6 +241,7 @@ class ScanFragment : Fragment(), PermissionListener, ZXingScannerView.ResultHand
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString(KEY_DID, did)
+        outState.putString(KEY_KIZ, kiz)
         super.onSaveInstanceState(outState)
     }
 }
