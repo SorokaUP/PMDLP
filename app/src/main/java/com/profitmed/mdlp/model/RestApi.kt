@@ -20,13 +20,15 @@ object RestApi {
             )
         )
         .client(okHttpClient())
-        .build().create(IRestApiRetrofit::class.java)
+        .build()
+        .create(IRestApiRetrofit::class.java)
 
     private fun okHttpClient() : OkHttpClient {
         val res = OkHttpClient.Builder()
         res.connectTimeout(10, TimeUnit.SECONDS)
         res.readTimeout(10, TimeUnit.SECONDS)
         res.writeTimeout(10, TimeUnit.SECONDS)
+        res.callTimeout(30, TimeUnit.SECONDS)
 
         res.addInterceptor{ chain ->
             val original: Request = chain.request()

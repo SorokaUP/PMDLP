@@ -7,4 +7,8 @@
     <string name="scan_mode_on">Режим </string>
     <string name="did_scan_mode">сканирования документа</string>
     <string name="kiz_scan_mode">сканирования КИЗ</string>
+    <string name="scan_ready">Готов к сканированию</string>
+    <string name="scanned_code">Сканирован код</string>
+    <string name="permission_grand_camera">Разрешения на камеру выданы</string>
+    <string name="permission_denied_camera">НЕТ РАЗРЕШЕНИЙ НА КАМЕРУ</string>
 </resources>

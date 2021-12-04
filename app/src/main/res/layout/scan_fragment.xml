@@ -9,7 +9,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:visibility="gone">
+        tools:visibility="visible">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -48,41 +48,22 @@
             android:id="@+id/zxscan"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@+id/layout_result"
             android:layout_below="@id/layout_did"
             tools:visibility="visible" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/layout_result"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:layout_alignParentBottom="true">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/txt_result"
-            tools:text="@string/app_name"
-            tools:textColor="@color/black"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:backgroundTint="@color/black"
-            android:gravity="center"/>
-
-    </LinearLayout>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fabScan"
-            android:layout_width="69dp"
-            android:layout_height="87dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignBottom="@id/zxscan"
             android:layout_centerHorizontal="true"
             android:layout_gravity="bottom|center"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="30dp"
             android:backgroundTint="#8BC34A"
-            android:src="@drawable/ic_qr_code" />
+            android:text="Сканировать"
+            app:icon="@drawable/ic_qr_code" />
+
+
     </RelativeLayout>
 
     <FrameLayout
@@ -107,7 +88,7 @@
         android:background="@color/purple_200"
         android:visibility="gone"
         android:backgroundTint="@color/white"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <ImageView
             android:id="@+id/imgRes"
