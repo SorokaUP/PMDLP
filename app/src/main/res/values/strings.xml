@@ -11,4 +11,11 @@
     <string name="scanned_code">Сканирован код</string>
     <string name="permission_grand_camera">Разрешения на камеру выданы</string>
     <string name="permission_denied_camera">НЕТ РАЗРЕШЕНИЙ НА КАМЕРУ</string>
+    <string name="menu_home">Главная</string>
+    <string name="menu_gallery">Галерея</string>
+    <string name="menu_slideshow">Слайды</string>
+    <string name="action_settings">Событие ХХХ</string>
+    <string name="nav_header_desc">Заголовок</string>
+    <string name="nav_header_title">Тайтл</string>
+    <string name="nav_header_subtitle">Под тайтл</string>
 </resources>

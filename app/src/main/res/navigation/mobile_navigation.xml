@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.profitmed.mdlp.ui.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/home_fragment" />
+
+    <fragment
+        android:id="@+id/nav_gallery"
+        android:name="com.profitmed.mdlp.ui.ScanFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/scan_fragment" />
+
+    <fragment
+        android:id="@+id/nav_slideshow"
+        android:name="com.profitmed.mdlp.ui.SettingsFragment"
+        android:label="@string/menu_slideshow"
+        tools:layout="@layout/settings_fragment" />
+</navigation>
