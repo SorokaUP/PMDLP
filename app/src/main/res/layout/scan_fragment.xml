@@ -44,18 +44,29 @@
 
         </LinearLayout>
 
-        <me.dm7.barcodescanner.zxing.ZXingScannerView
-            android:id="@+id/zxscan"
+        <com.budiyev.android.codescanner.CodeScannerView
+            android:id="@+id/scanner_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/layout_did"
-            tools:visibility="visible" />
+            app:autoFocusButtonColor="@android:color/white"
+            app:autoFocusButtonVisible="true"
+            app:flashButtonColor="@android:color/white"
+            app:flashButtonVisible="true"
+            app:frameColor="@android:color/white"
+            app:frameCornersSize="50dp"
+            app:frameCornersRadius="0dp"
+            app:frameAspectRatioWidth="1"
+            app:frameAspectRatioHeight="1"
+            app:frameSize="0.50"
+            app:frameThickness="2dp"
+            app:maskColor="#77000000"
+            android:layout_below="@id/layout_did"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fabScan"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/zxscan"
+            android:layout_alignBottom="@id/scanner_view"
             android:layout_centerHorizontal="true"
             android:layout_gravity="bottom|center"
             android:layout_marginBottom="30dp"
