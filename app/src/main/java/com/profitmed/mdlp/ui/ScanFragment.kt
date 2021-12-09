@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -24,11 +23,18 @@ import com.profitmed.mdlp.viewmodel.AppState
 import com.profitmed.mdlp.viewmodel.ScanViewModel
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.DecodeCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import android.content.DialogInterface
+import android.opengl.Visibility
+
+import android.text.InputType
+
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+
 
 class ScanFragment : Fragment(), PermissionListener {
 
@@ -61,8 +67,7 @@ class ScanFragment : Fragment(), PermissionListener {
 
 
     //----------------------------------------------------------------------------------------------
-    // INITIAL
-
+    //region INITIAL
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -106,8 +111,8 @@ class ScanFragment : Fragment(), PermissionListener {
         init()
         initClickListeners()
 
-        scanDid(did)
-        changeModeDid()
+        //scanDid(did)
+        scanDid("142405117")
     }
 
     private fun init() {
@@ -134,20 +139,22 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
     private fun initClickListeners() {
-        binding.inputDidLayout.setEndIconOnClickListener {
-            changeModeDid()
-        }
         binding.fabScan.setOnClickListener {
-            startScanner()
+            inputKizByCamera()
+        }
+        binding.inputDidByKeyboard.setOnClickListener{
+            inputDidByKeyboard()
+        }
+        binding.inputDidByCamera.setOnClickListener {
+            inputDidByCamera()
         }
     }
 
     private fun renderData(appState: AppState) {
-        binding.resultLayout.visibility = View.GONE
         when (appState) {
             is AppState.Success -> {
                 binding.loadingLayout.visibility = View.GONE
-                successAction(appState.res.ID)
+                successAction(appState.res.MSG)
                 showCurrentScanMode()
                 viewModel.getLiveData().value = AppState.Idle
             }
@@ -162,7 +169,7 @@ class ScanFragment : Fragment(), PermissionListener {
                 viewModel.getLiveData().value = AppState.Idle
             }
             else -> {
-                // Простой
+                binding.loadingLayout.visibility = View.GONE
             }
         }
     }
@@ -210,13 +217,14 @@ class ScanFragment : Fragment(), PermissionListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
     //endregion
+    //endregion
 
 
 
     //----------------------------------------------------------------------------------------------
     // WORK
 
-    //region Работа с камерой
+    //region Методы работы с камерой
     private fun startScanner() {
         codeScanner.startPreview()
     }
@@ -232,12 +240,21 @@ class ScanFragment : Fragment(), PermissionListener {
             scanDid(code)
         }
         else {
-            putInputKiz(code)
+            scanKiz(code)
         }
     }
 
-    private fun changeModeDid() {
-        isDidMode = !isDidMode
+    //region Режим работы
+    private fun setModeScanDid() {
+        setModeAsDid(true)
+    }
+
+    private fun setModeScanKiz() {
+        setModeAsDid(false)
+    }
+
+    private fun setModeAsDid(isDidMode: Boolean) {
+        this.isDidMode = isDidMode
         showCurrentScanMode()
     }
 
@@ -252,21 +269,59 @@ class ScanFragment : Fragment(), PermissionListener {
 
         binding.inputDidLayout.helperText = msg
     }
+    //endregion
 
-    private fun putInputKiz(kiz: String) {
-        this.kiz = kiz
-        viewModel.putInputKiz(did, kiz)
-    }
-
+    //region КЛЮЧЕВЫЕ МЕТОДЫ
     private fun scanDid(did: String) {
         this.did = did
         binding.inputDid.setText(did)
-        changeModeDid()
+        viewModel.checkDid(did)
+        setModeScanKiz()
     }
 
+    private fun scanKiz(kiz: String) {
+        this.kiz = kiz
+        viewModel.inputKiz(did, kiz)
+    }
+    //endregion
+
+    //region Методы ввода данных
+    private fun inputDidByKeyboard() {
+        stopScanner()
+        AlertDialog.Builder(requireContext()).apply {
+            this.setTitle("Введите DID документа")
+
+            val input = EditText(context).apply {
+                this.inputType = InputType.TYPE_CLASS_TEXT
+            }
+            this.setView(input)
+
+            this.setPositiveButton(getString(android.R.string.ok),
+                DialogInterface.OnClickListener { dialog, which -> inputDidByKeyboardHandler(input.text.toString()) })
+            this.setNegativeButton(getString(android.R.string.cancel),
+                DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
+        }.show()
+    }
+
+    private fun inputDidByKeyboardHandler(did: String) {
+        scanDid(did)
+        //startScanner()
+    }
+
+    private fun inputDidByCamera() {
+        setModeScanDid()
+        startScanner()
+    }
+
+    private fun inputKizByCamera() {
+        setModeScanKiz()
+        startScanner()
+    }
+    //endregion
+
     //region Реакция системы на ответ от RestApi
-    private fun successAction(resId: Int) {
-        context?.showBottomSheet(getString(R.string.added_id) + resId.toString(), R.drawable.ic_ok_circle)
+    private fun successAction(msg: String) {
+        context?.showBottomSheet(msg, R.drawable.ic_ok_circle)
     }
 
     private fun errorAction(errMsg: String) {
@@ -276,7 +331,10 @@ class ScanFragment : Fragment(), PermissionListener {
     private fun Context.showBottomSheet(msg: String, iconId: Int) {
         BottomSheetDialog(this).apply {
             this.setContentView(R.layout.bottom_sheet)
-            (this.findViewById(R.id.modalTvRes) as TextView?)?.text = msg
+            (this.findViewById(R.id.modalTvRes) as TextView?)?.apply {
+                this.visibility = if (msg.isEmpty()) View.GONE else View.VISIBLE
+                this.text = msg
+            }
             (this.findViewById(R.id.modalTvScannedCode) as TextView?)?.text = kiz
             (this.findViewById(R.id.modalImgRes) as ImageView?)?.setImageResource(iconId)
         }.show()
@@ -284,9 +342,9 @@ class ScanFragment : Fragment(), PermissionListener {
     //endregion
 
 
-
     //----------------------------------------------------------------------------------------------
     // SYSTEM
+//region SYSTEM
 
     override fun onResume() {
         super.onResume()
@@ -305,4 +363,5 @@ class ScanFragment : Fragment(), PermissionListener {
         outState.putString(KEY_KIZ, kiz)
         super.onSaveInstanceState(outState)
     }
+//endregion
 }

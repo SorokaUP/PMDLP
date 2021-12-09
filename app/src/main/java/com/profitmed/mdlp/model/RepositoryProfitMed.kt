@@ -2,8 +2,8 @@ package com.profitmed.mdlp.model
 
 import retrofit2.Callback
 
-class Repository: IRepository {
-    override fun putInputKiz(
+class RepositoryProfitMed: IRepositoryProfitMed {
+    override fun inputKiz(
         callback: Callback<ResponseIdResMsg>,
         did: String,
         kiz: String,
@@ -14,7 +14,15 @@ class Repository: IRepository {
         var2: String
     ) {
         val body = RequestImportKiz(did, kiz, lid800, eid, lid4000, var1, var2)
-        RestApi.pm.importkiz(body)
+        RestApi.profitMed.importkiz(body)
+            .enqueue(callback)
+    }
+
+    override fun checkDid(
+        callback: Callback<ResponseCheckDid>,
+        did: String
+    ) {
+        RestApi.profitMed.checkDid(did)
             .enqueue(callback)
     }
 }
