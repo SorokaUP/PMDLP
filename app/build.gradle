@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    compileSdk 30
+    compileSdk 21
 
     defaultConfig {
         applicationId "com.profitmed.mdlp"
-        minSdk 30
+        minSdk 21
         targetSdk 30
         versionCode 1
         versionName "1.0"
@@ -21,7 +21,9 @@ android {
         Properties properties = new Properties()
         properties.load(project.rootProject.file("apikey.properties").newDataInputStream())
         def apiKey  = properties.getProperty("restApiKey", "")
+        def apiHost  = properties.getProperty("restApiHost", "")
         it.buildConfigField "String", "REST_API_KEY", apiKey
+        it.buildConfigField "String", "REST_API_HOST", apiHost
     }
     buildTypes {
         release {
@@ -46,7 +48,6 @@ dependencies {
 
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.firebase:firebase-messaging:20.1.0'
-    //implementation files('core-3.4.1.jar') // ZXING core
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -82,6 +83,15 @@ dependencies {
     //GSON
     implementation 'com.google.code.gson:gson:2.8.6'
 
-    implementation 'me.dm7.barcodescanner:zxing:1.9.13'
+
+
+    // Вариант 1
+    //implementation 'me.dm7.barcodescanner:zxing:1.9.13'
     implementation 'com.karumi:dexter:5.0.0'
+
+    // Вариант 2 (работает + есть кнопки автофокуса и фонарика)
+    implementation 'com.budiyev.android:code-scanner:2.1.0'
+
+    // Вариант 3
+    //implementation files('core-3.4.1.jar') // ZXING core
 }

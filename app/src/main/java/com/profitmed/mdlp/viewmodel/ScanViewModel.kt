@@ -1,12 +1,10 @@
 package com.profitmed.mdlp.viewmodel
 
-import android.content.res.Resources
 import android.util.Log
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.profitmed.mdlp.R
-import com.profitmed.mdlp.model.Repository
-import com.profitmed.mdlp.model.ResponseIdResMsg
+import com.profitmed.mdlp.model.*
 import com.profitmed.mdlp.ui.ScanFragment
 import com.profitmed.mdlp.ui.checkKIZ
 import retrofit2.Call
@@ -19,25 +17,24 @@ class ScanViewModel(
     private val liveDataToObserve: MutableLiveData<AppState> = MutableLiveData(),
     // Источник данных для приложения. Сам Репозиторий берет данные от туда, от куда ему нужно,
     // он лишь получает и хранит данные
-    private val repository: Repository = Repository()
+    private val repository: RepositoryProfitMed = RepositoryProfitMed()
 ): ViewModel() {
     fun getLiveData() = liveDataToObserve
-    fun putInputKiz(did: String, kiz: String) {
+
+    //----------------------------------------------------------------------------------------------
+
+    fun inputKiz(did: String, kiz: String) {
         Log.d("InputKiz", kiz)
         liveDataToObserve.value = AppState.Loading
 
-        if (did.isEmpty() || did.trim() == "0") {
-            liveDataToObserve.value = AppState.Error(Exception("Не отсканирован документ"))
-            return
-        }
         if (!kiz.checkKIZ(true) && !kiz.checkKIZ(false)) {
             liveDataToObserve.value = AppState.Error(Exception("Не отсканирован КИЗ (коробка или упаковка)"))
             return
         }
 
         Thread {
-            repository.putInputKiz(
-                callBack,
+            repository.inputKiz(
+                callbackInputKiz,
                 did,
                 kiz,
                 ScanFragment.DEF_LID800,
@@ -48,26 +45,86 @@ class ScanViewModel(
             )
         }.start()
     }
-
-    private val callBack = object :
+    private val callbackInputKiz = object :
         Callback<ResponseIdResMsg> {
 
         override fun onResponse(call: Call<ResponseIdResMsg>, response: Response<ResponseIdResMsg>) {
-            val res: ResponseIdResMsg? = response.body()
+            response.setAppStateByRes()
+        }
+
+        override fun onFailure(call: Call<ResponseIdResMsg>, t: Throwable) {
+            AppState.Error(t)
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+
+    fun checkDid(did: String) {
+        Log.d("checkDid", did)
+        liveDataToObserve.value = AppState.Loading
+
+        if (!checkDidFormat(did)) {
+            liveDataToObserve.value = AppState.Error(Exception("Не верный DID документа"))
+            return
+        }
+
+        Thread {
+            repository.checkDid(
+                callbackCheckDid,
+                did
+            )
+        }.start()
+    }
+    private val callbackCheckDid = object :
+        Callback<ResponseCheckDid> {
+
+        override fun onResponse(call: Call<ResponseCheckDid>, response: Response<ResponseCheckDid>) {
+            val res = response.body()
             liveDataToObserve.postValue(
                 if (response.isSuccessful && res != null) {
-                    if (res.RES >= 0)
-                        AppState.Success(res)
-                    else
+                    if (res.RES > 0) {
+                        AppState.SuccessCheckDid(res.DID)
+                    }
+                    else {
                         AppState.Error(Exception(res.MSG))
+                    }
                 } else {
                     AppState.Error(Exception("rest_api_error"))
                 }
             )
         }
 
-        override fun onFailure(call: Call<ResponseIdResMsg>, t: Throwable) {
+        override fun onFailure(call: Call<ResponseCheckDid>, t: Throwable) {
             AppState.Error(t)
         }
+    }
+
+    fun checkDidFormat(did: String): Boolean {
+        return did.isNotEmpty() &&
+                did.isDigitsOnly() &&
+                did != "0" &&
+                did.length <= 10 &&
+                did <= Int.MAX_VALUE.toString()
+    }
+
+    //----------------------------------------------------------------------------------------------
+
+    private fun Response<*>.setAppStateByRes(isShowBottomSheetSuccess: Boolean = true) {
+        val res:IResMsg? = this.body() as IResMsg?
+        liveDataToObserve.postValue(
+            if (this.isSuccessful && res != null) {
+                if (res.RES > 0) {
+                    if (isShowBottomSheetSuccess)
+                        AppState.Success(res.toResponseResMsg())
+                    else
+                        AppState.Idle
+                }
+                else {
+                    AppState.Error(Exception(res.MSG))
+                }
+            } else {
+                AppState.Error(Exception("rest_api_error"))
+            }
+        )
     }
 }

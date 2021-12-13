@@ -12,8 +12,8 @@ import okhttp3.OkHttpClient
 object RestApi {
     private const val LOG_TAG = "RestApi"
 
-    val pm: IRestApiRetrofit = Retrofit.Builder()
-        .baseUrl(RestApiSettings.PmSettings.ADDRESS)
+    val profitMed: IRestApiRetrofitProfitMed = Retrofit.Builder()
+        .baseUrl(RestApiSettings.PmSettings.ADDRESS_BASE_API)
         .addConverterFactory(
             GsonConverterFactory.create(
                 GsonBuilder().create()
@@ -21,7 +21,7 @@ object RestApi {
         )
         .client(okHttpClient())
         .build()
-        .create(IRestApiRetrofit::class.java)
+        .create(IRestApiRetrofitProfitMed::class.java)
 
     private fun okHttpClient() : OkHttpClient {
         val res = OkHttpClient.Builder()
@@ -30,7 +30,7 @@ object RestApi {
         res.writeTimeout(10, TimeUnit.SECONDS)
         res.callTimeout(30, TimeUnit.SECONDS)
 
-        res.addInterceptor{ chain ->
+        res.addInterceptor { chain ->
             val original: Request = chain.request()
             val requestBuilder: Request.Builder = original.newBuilder()
                 .url(

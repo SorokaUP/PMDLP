@@ -11,4 +11,8 @@
     <string name="scanned_code">Сканирован код</string>
     <string name="permission_grand_camera">Разрешения на камеру выданы</string>
     <string name="permission_denied_camera">НЕТ РАЗРЕШЕНИЙ НА КАМЕРУ</string>
+    <string name="no_scan_kiz">Не отсканирован КИЗ (коробка или упаковка)</string>
+    <string name="no_scan_did">Не указан DID документа</string>
+    <string name="no_format_did">DID документа не соответствует формату (только цифры, до 2147483647)</string>
+    <string name="fab_scan_kiz">Сканировать КИЗ</string>
 </resources>
