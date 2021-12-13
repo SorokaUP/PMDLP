@@ -28,12 +28,16 @@ import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.DecodeCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import android.content.DialogInterface
-import android.opengl.Visibility
-
 import android.text.InputType
-
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.core.text.isDigitsOnly
+import com.google.zxing.BarcodeFormat
+import java.lang.Exception
+import android.app.Activity
+
+
+
 
 
 class ScanFragment : Fragment(), PermissionListener {
@@ -62,6 +66,11 @@ class ScanFragment : Fragment(), PermissionListener {
         const val KEY_KIZ = "KIZ"
 
         const val PERMISSION_REQUEST_CODE  = 1
+
+        const val FRAME_ASPECT_W_WIDE = 2f
+        const val FRAME_ASPECT_W_CUBE = 1f
+        const val FRAME_SIZE_WIDE = 0.85f
+        const val FRAME_SIZE_CUBE = 0.50f
     }
 
 
@@ -91,7 +100,7 @@ class ScanFragment : Fragment(), PermissionListener {
         }
 
         if (checkPermissions()) {
-            go()
+            go(savedInstanceState != null)
         }
         else {
             requestPermission()
@@ -107,12 +116,13 @@ class ScanFragment : Fragment(), PermissionListener {
         )
     }
 
-    private fun go() {
+    private fun go(isSavedInstanceState: Boolean = false) {
         init()
         initClickListeners()
 
-        //scanDid(did)
-        scanDid("142405117")
+        setModeScanDid()
+        if (isSavedInstanceState)
+            setDid(did)
     }
 
     private fun init() {
@@ -151,27 +161,33 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
     private fun renderData(appState: AppState) {
+        binding.loadingLayout.visibility = View.GONE
         when (appState) {
             is AppState.Success -> {
-                binding.loadingLayout.visibility = View.GONE
                 successAction(appState.res.MSG)
                 showCurrentScanMode()
-                viewModel.getLiveData().value = AppState.Idle
+                appStateToIdle()
+            }
+            is AppState.SuccessCheckDid -> {
+                setDid(appState.did.toString())
             }
             is AppState.Loading -> {
                 binding.loadingLayout.visibility = View.VISIBLE
                 stopScanner()
             }
             is AppState.Error -> {
-                binding.loadingLayout.visibility = View.GONE
                 errorAction(appState.error.message ?: getString(R.string.rest_api_error))
                 showCurrentScanMode()
-                viewModel.getLiveData().value = AppState.Idle
+                appStateToIdle()
             }
             else -> {
                 binding.loadingLayout.visibility = View.GONE
             }
         }
+    }
+
+    private fun appStateToIdle() {
+        viewModel.getLiveData().value = AppState.Idle
     }
 
     //region Разрешения
@@ -180,11 +196,12 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
     private fun checkPermissionCamera(): Boolean {
-        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        return context?.let { ContextCompat.checkSelfPermission(it, Manifest.permission.CAMERA) } ==
+                PackageManager.PERMISSION_GRANTED
     }
 
     override fun onPermissionGranted(response: PermissionGrantedResponse?) {
-        showToast(getString(R.string.permission_grand_camera))
+        //showToast(getString(R.string.permission_grand_camera))
     }
 
     override fun onPermissionDenied(response: PermissionDeniedResponse?) {
@@ -195,7 +212,7 @@ class ScanFragment : Fragment(), PermissionListener {
         permission: PermissionRequest?,
         token: PermissionToken?
     ) {
-        showToast("onPermissionRationaleShouldBeShown")
+        //TODO: Реализовать
     }
 
     override fun onRequestPermissionsResult(
@@ -226,12 +243,20 @@ class ScanFragment : Fragment(), PermissionListener {
 
     //region Методы работы с камерой
     private fun startScanner() {
-        codeScanner.startPreview()
+        if (checkPermissions()) {
+            codeScanner.startPreview()
+        } else {
+            requestPermission()
+        }
     }
 
     private fun stopScanner() {
-        if (this::codeScanner.isInitialized)
-            codeScanner.stopPreview()
+        if (checkPermissions()) {
+            if (this::codeScanner.isInitialized)
+                codeScanner.stopPreview()
+        } else {
+            //TODO: ЗАПРОС ПРАВ???
+        }
     }
     //endregion
 
@@ -254,6 +279,14 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
     private fun setModeAsDid(isDidMode: Boolean) {
+        if (!isDidMode && !viewModel.checkDidFormat(this.did)) {
+            errorAction(getString(R.string.no_format_did))
+            throw Exception(getString(R.string.no_format_did))
+        }
+
+        // Настройки границы сканирования
+        changeScannerFrame(isDidMode)
+
         this.isDidMode = isDidMode
         showCurrentScanMode()
     }
@@ -269,15 +302,37 @@ class ScanFragment : Fragment(), PermissionListener {
 
         binding.inputDidLayout.helperText = msg
     }
+
+    private fun changeScannerFrame(isDidMode: Boolean) {
+        binding.scannerView.frameAspectRatioWidth = if (isDidMode) FRAME_ASPECT_W_WIDE else FRAME_ASPECT_W_CUBE
+        binding.scannerView.frameSize = if (isDidMode) FRAME_SIZE_WIDE else FRAME_SIZE_CUBE
+    }
     //endregion
 
     //region КЛЮЧЕВЫЕ МЕТОДЫ
+    //-----------------------------------------
+    // Сканирование камерой или Ввод с клавиатуры
     private fun scanDid(did: String) {
-        this.did = did
-        binding.inputDid.setText(did)
-        viewModel.checkDid(did)
-        setModeScanKiz()
+        if (viewModel.checkDidFormat(did)) {
+            viewModel.checkDid(did)
+        }
+        else {
+            errorAction(getString(R.string.no_format_did))
+        }
     }
+
+    private fun setDid(did: String) {
+        if (viewModel.checkDidFormat(did)) {
+            this.did = did
+            binding.inputDid.setText(this.did)
+            setModeScanKiz()
+        }
+        else {
+            errorAction(getString(R.string.no_format_did))
+        }
+    }
+
+    //-----------------------------------------
 
     private fun scanKiz(kiz: String) {
         this.kiz = kiz
@@ -305,7 +360,6 @@ class ScanFragment : Fragment(), PermissionListener {
 
     private fun inputDidByKeyboardHandler(did: String) {
         scanDid(did)
-        //startScanner()
     }
 
     private fun inputDidByCamera() {
@@ -314,8 +368,13 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
     private fun inputKizByCamera() {
-        setModeScanKiz()
-        startScanner()
+        try {
+            setModeScanKiz()
+            startScanner()
+        }
+        catch (ex: Exception) {
+            ex.message?.let { showToast(it) }
+        }
     }
     //endregion
 

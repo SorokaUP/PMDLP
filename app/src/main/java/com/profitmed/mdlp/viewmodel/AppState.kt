@@ -7,4 +7,5 @@ sealed class AppState {
     data class Error(val error: Throwable) : AppState()
     object Loading : AppState()
     object Idle : AppState()
+    data class SuccessCheckDid(val did: Int) : AppState()
 }

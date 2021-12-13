@@ -1,6 +1,7 @@
 package com.profitmed.mdlp.viewmodel
 
 import android.util.Log
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.profitmed.mdlp.model.*
@@ -62,7 +63,7 @@ class ScanViewModel(
         Log.d("checkDid", did)
         liveDataToObserve.value = AppState.Loading
 
-        if (did.isEmpty() || did.trim() == "0") {
+        if (!checkDidFormat(did)) {
             liveDataToObserve.value = AppState.Error(Exception("Не верный DID документа"))
             return
         }
@@ -78,7 +79,19 @@ class ScanViewModel(
         Callback<ResponseCheckDid> {
 
         override fun onResponse(call: Call<ResponseCheckDid>, response: Response<ResponseCheckDid>) {
-            response.setAppStateByRes()
+            val res = response.body()
+            liveDataToObserve.postValue(
+                if (response.isSuccessful && res != null) {
+                    if (res.RES > 0) {
+                        AppState.SuccessCheckDid(res.DID)
+                    }
+                    else {
+                        AppState.Error(Exception(res.MSG))
+                    }
+                } else {
+                    AppState.Error(Exception("rest_api_error"))
+                }
+            )
         }
 
         override fun onFailure(call: Call<ResponseCheckDid>, t: Throwable) {
@@ -86,16 +99,29 @@ class ScanViewModel(
         }
     }
 
+    fun checkDidFormat(did: String): Boolean {
+        return did.isNotEmpty() &&
+                did.isDigitsOnly() &&
+                did != "0" &&
+                did.length <= 10 &&
+                did <= Int.MAX_VALUE.toString()
+    }
+
     //----------------------------------------------------------------------------------------------
 
-    private fun Response<*>.setAppStateByRes() {
+    private fun Response<*>.setAppStateByRes(isShowBottomSheetSuccess: Boolean = true) {
         val res:IResMsg? = this.body() as IResMsg?
         liveDataToObserve.postValue(
             if (this.isSuccessful && res != null) {
-                if (res.RES > 0)
-                    AppState.Success(res.toResponseResMsg())
-                else
+                if (res.RES > 0) {
+                    if (isShowBottomSheetSuccess)
+                        AppState.Success(res.toResponseResMsg())
+                    else
+                        AppState.Idle
+                }
+                else {
                     AppState.Error(Exception(res.MSG))
+                }
             } else {
                 AppState.Error(Exception("rest_api_error"))
             }

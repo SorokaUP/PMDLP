@@ -30,7 +30,7 @@ object RestApi {
         res.writeTimeout(10, TimeUnit.SECONDS)
         res.callTimeout(30, TimeUnit.SECONDS)
 
-        res.addInterceptor{ chain ->
+        res.addInterceptor { chain ->
             val original: Request = chain.request()
             val requestBuilder: Request.Builder = original.newBuilder()
                 .url(
