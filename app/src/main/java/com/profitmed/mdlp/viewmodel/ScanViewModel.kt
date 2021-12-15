@@ -53,14 +53,14 @@ class ScanViewModel(
         }
 
         override fun onFailure(call: Call<ResponseIdResMsg>, t: Throwable) {
-            AppState.Error(t)
+            liveDataToObserve.postValue(AppState.Error(t))
         }
     }
 
     //----------------------------------------------------------------------------------------------
 
-    fun checkDid(did: String) {
-        Log.d("checkDid", did)
+    fun scanDid(did: String) {
+        Log.d("scanDid", did)
         liveDataToObserve.value = AppState.Loading
 
         if (!checkDidFormat(did)) {
@@ -95,7 +95,7 @@ class ScanViewModel(
         }
 
         override fun onFailure(call: Call<ResponseCheckDid>, t: Throwable) {
-            AppState.Error(t)
+            liveDataToObserve.postValue(AppState.Error(t))
         }
     }
 
