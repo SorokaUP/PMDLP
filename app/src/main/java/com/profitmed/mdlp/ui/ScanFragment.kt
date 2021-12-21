@@ -30,6 +30,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import android.content.DialogInterface
 import android.text.InputType
 import android.widget.EditText
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.google.zxing.BarcodeFormat
 import java.lang.Exception
@@ -72,9 +74,11 @@ class ScanFragment : Fragment(), PermissionListener {
     }
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //initPermissionListener()
+    }
 
-    //----------------------------------------------------------------------------------------------
-    //region INITIAL
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -116,14 +120,7 @@ class ScanFragment : Fragment(), PermissionListener {
 
     //region INIT
     private fun init() {
-        val scannerView = binding.scannerView
-        val activity = requireActivity()
-        codeScanner = CodeScanner(activity, scannerView)
-        codeScanner.decodeCallback = DecodeCallback {
-            activity.runOnUiThread {
-                scannerCallback(it.text)
-            }
-        }
+        initCodeScanner()
 
         Dexter.withActivity(this.activity)
             .withPermission(android.Manifest.permission.CAMERA)
@@ -138,6 +135,17 @@ class ScanFragment : Fragment(), PermissionListener {
         })
 
         typeSetDid = arrayOf(getString(R.string.input_type_keyboard), getString(R.string.input_type_camera), getString(R.string.input_type_cancel))
+    }
+
+    private fun initCodeScanner() {
+        val scannerView = binding.scannerView
+        val activity = requireActivity()
+        codeScanner = CodeScanner(activity, scannerView)
+        codeScanner.decodeCallback = DecodeCallback {
+            activity.runOnUiThread {
+                scannerCallback(it.text)
+            }
+        }
     }
 
     private fun initClickListeners() {
@@ -213,7 +221,7 @@ class ScanFragment : Fragment(), PermissionListener {
         permission: PermissionRequest?,
         token: PermissionToken?
     ) {
-        //TODO: Реализовать
+        showToast("Для работы необходимо выдать разрешение на работу с Камерой")
     }
 
     override fun onRequestPermissionsResult(
@@ -228,6 +236,39 @@ class ScanFragment : Fragment(), PermissionListener {
             }
         }
     }
+
+
+
+
+
+
+
+
+
+    /*private fun checkCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED -> {
+                go()
+            }
+
+            else -> {
+                permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+            }
+        }
+    }
+
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
+    private fun initPermissionListener() {
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()){
+            if (it[Manifest.permission.CAMERA] == true) {
+                Toast.makeText(this,"Camera run", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this,"Permission denied", Toast.LENGTH_LONG).show()
+            }
+        }
+    }*/
     //endregion
     //endregion
 
@@ -417,7 +458,10 @@ class ScanFragment : Fragment(), PermissionListener {
     override fun onResume() {
         super.onResume()
         if (checkPermissionCamera()) {
-            codeScanner.startPreview()
+            if (!this::codeScanner.isInitialized) {
+                initCodeScanner()
+                codeScanner.startPreview()
+            }
         }
     }
 
