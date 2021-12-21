@@ -329,14 +329,18 @@ class ScanFragment : Fragment(), PermissionListener {
 
     private fun showCurrentScanMode() {
         var msg = getString(R.string.scan_mode_on) + " "
+        var msgHelper = ""
 
-        msg += if (isDidMode) {
-            getString(R.string.did_scan_mode)
+        if (isDidMode) {
+            msg += getString(R.string.did_scan_mode)
+            msgHelper = getString(R.string.helper_input_type_did)
         } else {
-            getString(R.string.kiz_scan_mode)
+            msg += getString(R.string.kiz_scan_mode)
+            msgHelper = getString(R.string.helper_input_type_kiz)
         }
 
         binding.inputDidLayout.helperText = msg
+        binding.tvHelperTextScanner.text = msgHelper
     }
 
     private fun changeScannerFrame(isDidMode: Boolean) {

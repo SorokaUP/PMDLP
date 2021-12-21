@@ -18,4 +18,6 @@
     <string name="input_type_keyboard">Ручной ввод</string>
     <string name="input_type_camera">Сканировать</string>
     <string name="input_type_cancel">Отмена</string>
+    <string name="helper_input_type_did">Наведите камеру на штрих-код документа</string>
+    <string name="helper_input_type_kiz">Наведите камеру на SSCC или SGTIN</string>
 </resources>
