@@ -27,6 +27,9 @@
                 app:helperText="@string/scan_mode_on"
                 app:counterEnabled="true"
                 app:counterMaxLength="10"
+                app:endIconCheckable="true"
+                app:endIconDrawable="@drawable/ic_document_scanner"
+                app:endIconMode="custom"
                 app:layout_constraintStart_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -38,32 +41,6 @@
                     android:inputType="text" />
 
             </com.google.android.material.textfield.TextInputLayout>
-
-            <ImageView
-                android:id="@+id/input_did_by_keyboard"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="60dp"
-                android:padding="5dp"
-                android:layout_marginBottom="16dp"
-                android:src="@drawable/ic_keyboard"
-                app:layout_constraintBottom_toBottomOf="@+id/input_did_layout"
-                app:layout_constraintEnd_toEndOf="@+id/input_did_layout"
-                app:layout_constraintEnd_toStartOf="@+id/input_did_layout"
-                app:layout_constraintTop_toTopOf="@+id/input_did_layout" />
-
-            <ImageView
-                android:id="@+id/input_did_by_camera"
-                android:src="@drawable/ic_camera"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="55dp"
-                android:padding="5dp"
-                android:layout_marginBottom="16dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/input_did_by_keyboard"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -84,6 +61,21 @@
             app:frameSize="0.50"
             app:frameThickness="2dp"
             app:maskColor="#77000000" />
+
+        <TextView
+            android:id="@+id/tvHelperTextScanner"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_below="@+id/layout_did"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_vertical|center_horizontal"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:shadowColor="@color/black"
+            android:shadowRadius="2"
+            android:shadowDy="2"
+            android:text="@string/helper_input_type_did" />
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fabScan"

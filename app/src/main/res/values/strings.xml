@@ -15,4 +15,9 @@
     <string name="no_scan_did">Не указан DID документа</string>
     <string name="no_format_did">DID документа не соответствует формату (только цифры, до 2147483647)</string>
     <string name="fab_scan_kiz">Сканировать КИЗ</string>
+    <string name="input_type_keyboard">Ручной ввод</string>
+    <string name="input_type_camera">Сканировать</string>
+    <string name="input_type_cancel">Отмена</string>
+    <string name="helper_input_type_did">Наведите камеру на штрих-код документа</string>
+    <string name="helper_input_type_kiz">Наведите камеру на SSCC или SGTIN</string>
 </resources>

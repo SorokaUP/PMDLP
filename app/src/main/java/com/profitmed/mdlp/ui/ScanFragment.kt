@@ -30,14 +30,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import android.content.DialogInterface
 import android.text.InputType
 import android.widget.EditText
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.text.isDigitsOnly
 import com.google.zxing.BarcodeFormat
 import java.lang.Exception
-import android.app.Activity
-
-
-
 
 
 class ScanFragment : Fragment(), PermissionListener {
@@ -51,6 +48,7 @@ class ScanFragment : Fragment(), PermissionListener {
     private var did: String = DEF_DID
     private var kiz: String = ""
     private var isDidMode: Boolean = false
+    private lateinit var typeSetDid: Array<String>
 
     companion object {
         fun newInstance() = ScanFragment()
@@ -71,12 +69,16 @@ class ScanFragment : Fragment(), PermissionListener {
         const val FRAME_ASPECT_W_CUBE = 1f
         const val FRAME_SIZE_WIDE = 0.85f
         const val FRAME_SIZE_CUBE = 0.50f
+        val SCAN_FORMAT_FOR_DID = mutableListOf(BarcodeFormat.CODE_128)
+        val SCAN_FORMAT_FOR_KIZ = mutableListOf(BarcodeFormat.CODE_128, BarcodeFormat.DATA_MATRIX)
     }
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //initPermissionListener()
+    }
 
-    //----------------------------------------------------------------------------------------------
-    //region INITIAL
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -94,9 +96,9 @@ class ScanFragment : Fragment(), PermissionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?){
         super.onViewCreated(view, savedInstanceState)
 
-        if (savedInstanceState != null) {
-            kiz = savedInstanceState.getString(KEY_KIZ, "")
-            did = savedInstanceState.getString(KEY_DID, "")
+        savedInstanceState?.let {
+            kiz = it.getString(KEY_KIZ, "")
+            did = it.getString(KEY_DID, "")
         }
 
         if (checkPermissions()) {
@@ -105,15 +107,6 @@ class ScanFragment : Fragment(), PermissionListener {
         else {
             requestPermission()
         }
-    }
-
-    private fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(), arrayOf(
-                Manifest.permission.CAMERA
-            ),
-            PERMISSION_REQUEST_CODE
-        )
     }
 
     private fun go(isSavedInstanceState: Boolean = false) {
@@ -125,15 +118,9 @@ class ScanFragment : Fragment(), PermissionListener {
             setDid(did)
     }
 
+    //region INIT
     private fun init() {
-        val scannerView = binding.scannerView
-        val activity = requireActivity()
-        codeScanner = CodeScanner(activity, scannerView)
-        codeScanner.decodeCallback = DecodeCallback {
-            activity.runOnUiThread {
-                scannerCallback(it.text)
-            }
-        }
+        initCodeScanner()
 
         Dexter.withActivity(this.activity)
             .withPermission(android.Manifest.permission.CAMERA)
@@ -146,20 +133,32 @@ class ScanFragment : Fragment(), PermissionListener {
             // Действие, выполняемое по случаю обновления данных в поставщике
             renderData(it)
         })
+
+        typeSetDid = arrayOf(getString(R.string.input_type_keyboard), getString(R.string.input_type_camera), getString(R.string.input_type_cancel))
+    }
+
+    private fun initCodeScanner() {
+        val scannerView = binding.scannerView
+        val activity = requireActivity()
+        codeScanner = CodeScanner(activity, scannerView)
+        codeScanner.decodeCallback = DecodeCallback {
+            activity.runOnUiThread {
+                scannerCallback(it.text)
+            }
+        }
     }
 
     private fun initClickListeners() {
         binding.fabScan.setOnClickListener {
             inputKizByCamera()
         }
-        binding.inputDidByKeyboard.setOnClickListener{
-            inputDidByKeyboard()
-        }
-        binding.inputDidByCamera.setOnClickListener {
-            inputDidByCamera()
+        binding.inputDidLayout.setEndIconOnClickListener {
+            inputDidByType()
         }
     }
+    //endregion
 
+    //region RENDER
     private fun renderData(appState: AppState) {
         binding.loadingLayout.visibility = View.GONE
         when (appState) {
@@ -189,10 +188,20 @@ class ScanFragment : Fragment(), PermissionListener {
     private fun appStateToIdle() {
         viewModel.getLiveData().value = AppState.Idle
     }
+    //endregion
 
     //region Разрешения
     private fun checkPermissions(): Boolean {
         return checkPermissionCamera()
+    }
+
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(
+            requireActivity(), arrayOf(
+                Manifest.permission.CAMERA
+            ),
+            PERMISSION_REQUEST_CODE
+        )
     }
 
     private fun checkPermissionCamera(): Boolean {
@@ -212,27 +221,54 @@ class ScanFragment : Fragment(), PermissionListener {
         permission: PermissionRequest?,
         token: PermissionToken?
     ) {
-        //TODO: Реализовать
+        showToast("Для работы необходимо выдать разрешение на работу с Камерой")
     }
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String?>,
         grantResults: IntArray
     ) {
-        var isAllGranted = true
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            // На случай, если будет запрос более одного разрешения
-            for (g in grantResults) {
-                if (g != PackageManager.PERMISSION_GRANTED) {
-                    isAllGranted = false
-                }
-            }
-            if (isAllGranted) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 go()
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
+
+
+
+
+
+
+
+
+    /*private fun checkCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED -> {
+                go()
+            }
+
+            else -> {
+                permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
+            }
+        }
+    }
+
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
+    private fun initPermissionListener() {
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()){
+            if (it[Manifest.permission.CAMERA] == true) {
+                Toast.makeText(this,"Camera run", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this,"Permission denied", Toast.LENGTH_LONG).show()
+            }
+        }
+    }*/
     //endregion
     //endregion
 
@@ -293,19 +329,24 @@ class ScanFragment : Fragment(), PermissionListener {
 
     private fun showCurrentScanMode() {
         var msg = getString(R.string.scan_mode_on) + " "
+        var msgHelper = ""
 
-        msg += if (isDidMode) {
-            getString(R.string.did_scan_mode)
+        if (isDidMode) {
+            msg += getString(R.string.did_scan_mode)
+            msgHelper = getString(R.string.helper_input_type_did)
         } else {
-            getString(R.string.kiz_scan_mode)
+            msg += getString(R.string.kiz_scan_mode)
+            msgHelper = getString(R.string.helper_input_type_kiz)
         }
 
         binding.inputDidLayout.helperText = msg
+        binding.tvHelperTextScanner.text = msgHelper
     }
 
     private fun changeScannerFrame(isDidMode: Boolean) {
         binding.scannerView.frameAspectRatioWidth = if (isDidMode) FRAME_ASPECT_W_WIDE else FRAME_ASPECT_W_CUBE
         binding.scannerView.frameSize = if (isDidMode) FRAME_SIZE_WIDE else FRAME_SIZE_CUBE
+        codeScanner.formats = if (isDidMode) SCAN_FORMAT_FOR_DID else SCAN_FORMAT_FOR_KIZ
     }
     //endregion
 
@@ -314,7 +355,7 @@ class ScanFragment : Fragment(), PermissionListener {
     // Сканирование камерой или Ввод с клавиатуры
     private fun scanDid(did: String) {
         if (viewModel.checkDidFormat(did)) {
-            viewModel.checkDid(did)
+            viewModel.scanDid(did)
         }
         else {
             errorAction(getString(R.string.no_format_did))
@@ -341,8 +382,21 @@ class ScanFragment : Fragment(), PermissionListener {
     //endregion
 
     //region Методы ввода данных
+    private fun inputDidByType() {
+        AlertDialog.Builder(requireContext()).apply {
+            this.setTitle("Введите DID документа")
+            this.setItems(typeSetDid, DialogInterface.OnClickListener {
+                    dialog, which -> when(typeSetDid[which]) {
+                        getString(R.string.input_type_keyboard) -> inputDidByKeyboard()
+                        getString(R.string.input_type_camera) -> inputDidByCamera()
+                    }
+            })
+        }.show()
+    }
+
     private fun inputDidByKeyboard() {
         stopScanner()
+
         AlertDialog.Builder(requireContext()).apply {
             this.setTitle("Введите DID документа")
 
@@ -407,13 +461,18 @@ class ScanFragment : Fragment(), PermissionListener {
 
     override fun onResume() {
         super.onResume()
-        if (checkPermissionCamera())
-            codeScanner.startPreview()
+        if (checkPermissionCamera()) {
+            if (!this::codeScanner.isInitialized) {
+                initCodeScanner()
+                codeScanner.startPreview()
+            }
+        }
     }
 
     override fun onPause() {
-        if (checkPermissionCamera())
+        if (checkPermissionCamera()) {
             codeScanner.releaseResources()
+        }
         super.onPause()
     }
 
