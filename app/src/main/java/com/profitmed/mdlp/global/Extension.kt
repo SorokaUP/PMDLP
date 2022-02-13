@@ -33,7 +33,7 @@ fun String.checkKIZ(isSGTIN: Boolean): Boolean {
             return false
         if (this.substring(0,2) != PREFIX_SGTIN && this.substring(1,3) != PREFIX_SGTIN)
             return false
-        if (this[this.length-1] != POSTIX_SGTIN)
+        if (this[this.length-1] != POSTIX_SGTIN && this[this.length-2] != POSTIX_SGTIN)
             return false
 
         return true

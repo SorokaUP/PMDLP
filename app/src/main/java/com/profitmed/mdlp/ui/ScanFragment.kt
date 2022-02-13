@@ -1,7 +1,7 @@
 package com.profitmed.mdlp.ui
 
 import android.Manifest
-import android.content.Context
+import android.content.*
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModelProvider
@@ -27,11 +27,9 @@ import androidx.core.content.ContextCompat
 import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.DecodeCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import android.content.DialogInterface
 import android.text.InputType
+import android.util.Log
 import android.widget.EditText
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.google.zxing.BarcodeFormat
 import java.lang.Exception
@@ -71,6 +69,8 @@ class ScanFragment : Fragment(), PermissionListener {
         const val FRAME_SIZE_CUBE = 0.50f
         val SCAN_FORMAT_FOR_DID = mutableListOf(BarcodeFormat.CODE_128)
         val SCAN_FORMAT_FOR_KIZ = mutableListOf(BarcodeFormat.CODE_128, BarcodeFormat.DATA_MATRIX)
+
+        const val INTENT_RECEIVER_NAME = "unitech.scanservice.data"
     }
 
 
@@ -89,6 +89,7 @@ class ScanFragment : Fragment(), PermissionListener {
 
         binding = ScanFragmentBinding.inflate(inflater, container, false)
         setHasOptionsMenu(true)
+        activity?.registerReceiver(scannerBroadcastReceiver, filter)
 
         return binding.root
     }
@@ -154,6 +155,22 @@ class ScanFragment : Fragment(), PermissionListener {
         }
         binding.inputDidLayout.setEndIconOnClickListener {
             inputDidByType()
+        }
+    }
+
+    var filter = IntentFilter(INTENT_RECEIVER_NAME)
+    private val scannerBroadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(p0: Context?, p1: Intent?) {
+            p1?.let{
+                if (it.action.equals(INTENT_RECEIVER_NAME)) {
+                    var scanBundle = it.extras
+                    if (scanBundle != null) {
+                        val data = scanBundle.getString("text") ?: "???"
+                        Log.e("scannerBR", data)
+                        scannerCallback(data)
+                    }
+                }
+            }
         }
     }
     //endregion
@@ -401,7 +418,7 @@ class ScanFragment : Fragment(), PermissionListener {
             this.setTitle("Введите DID документа")
 
             val input = EditText(context).apply {
-                this.inputType = InputType.TYPE_CLASS_TEXT
+                this.inputType = InputType.TYPE_NUMBER_FLAG_SIGNED
             }
             this.setView(input)
 

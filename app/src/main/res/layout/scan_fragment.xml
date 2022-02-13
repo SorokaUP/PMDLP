@@ -37,8 +37,7 @@
                     android:id="@+id/input_did"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
-                    android:inputType="text" />
+                    android:enabled="false"/>
 
             </com.google.android.material.textfield.TextInputLayout>
 
